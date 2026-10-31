@@ -1,0 +1,11 @@
+1xKey — bộ gõ tiếng Việt cho macOS
+Copyright (C) 2026 Phạm Xuân Hiếu
+
+1xKey là phần mềm tự do, phát hành theo GNU General Public License v3.0 (xem LICENSE).
+
+1xKey được phát triển từ:
+- XKey (https://github.com/xmannv/xkey), Copyright (c) 2025 XKey, giấy phép MIT.
+  Toàn văn giấy phép gốc: LICENSE-XKey-MIT.
+- OpenKey (https://github.com/tuyenvm/OpenKey), Copyright (C) Mai Vũ Tuyên, giấy phép GPL-3.0.
+  Engine gõ (VNEngine, Smart Switch, Macro) được port từ OpenKey, nên toàn bộ sản phẩm theo GPL-3.0.
+- Sparkle (https://sparkle-project.org), giấy phép MIT.

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 1xKey: no sandbox (required for a system-wide CGEventTap); no iCloud, App Group,
+	     Apple Events or file-access entitlements. Settings live in
+	     ~/Library/Application Support/1xKey/, readable by both non-sandboxed processes. -->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>
