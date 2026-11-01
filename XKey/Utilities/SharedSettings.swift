@@ -1635,6 +1635,12 @@ class SharedSettings {
     /// Electron chats and terminals.
     static func applyMinimalProfile(to prefs: inout Preferences) {
         let none = Hotkey(keyCode: 0, modifiers: [])
+        // No global hotkeys at all: ⌘⇧V and friends belong to other apps. Switching
+        // Vietnamese on/off happens only from the menu bar popover.
+        prefs.toggleHotkey = none
+        prefs.statusBarClickToToggle = false
+        prefs.showDockIcon = false
+        prefs.excludedApps = []
         prefs.tempOffToolbarEnabled = false
         prefs.tempOffToolbarHotkey = none
         prefs.convertToolHotkey = none

@@ -1680,11 +1680,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.debugWindowController?.logEvent(message)
         }
         
-        // Always install bundled XKeyIM after a short delay
-        // This ensures XKeyIM is always in sync with XKey app
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            XKeyIMUpdateManager.shared.installBundledXKeyIM(showNotification: false)
-        }
+        // 1xKey ships without the input-method (IMKit) variant: nothing is installed
+        // into ~/Library/Input Methods. Typing runs only through the menu bar app.
     }
 
     // MARK: - Secure Input Detection
