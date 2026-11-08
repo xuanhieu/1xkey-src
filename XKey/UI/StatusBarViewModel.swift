@@ -19,6 +19,10 @@ class StatusBarViewModel: ObservableObject {
     @Published var debugModeEnabled = false
     @Published var isRemoteDesktopRunning = false
     @Published var isRemoteDesktopTarget = false
+    /// Set while another process holds Secure Input; drives the warning card in the menu.
+    @Published var secureInputAdvice: SecureInputAdvice?
+    @Published var launchAtLogin = LaunchAtLogin.isEnabled()
+    @Published var launchAtLoginNeedsApproval = false
 
     private weak var keyboardHandler: KeyboardEventHandler?
     private var remoteDesktopWorkspaceObservers: [NSObjectProtocol] = []
@@ -229,6 +233,108 @@ class StatusBarViewModel: ObservableObject {
     
     func quit() {
         NSApplication.shared.terminate(nil)
+    }
+
+    // MARK: - Launch at login
+
+    func refreshLaunchAtLogin() {
+        let state = LaunchAtLogin.status()
+        let enabled = state == .enabled
+        if launchAtLogin != enabled { launchAtLogin = enabled }
+        let needsApproval = state == .requiresApproval
+        if launchAtLoginNeedsApproval != needsApproval { launchAtLoginNeedsApproval = needsApproval }
+    }
+
+    func setLaunchAtLogin(_ on: Bool) {
+        let state = LaunchAtLogin.setEnabled(on)
+        launchAtLogin = state == .enabled
+        launchAtLoginNeedsApproval = on && state == .requiresApproval
+        if launchAtLoginNeedsApproval {
+            LaunchAtLogin.openSystemSettings()
+        }
+        log("Launch at login: \(on ? "ON" : "OFF") -> \(state)")
+    }
+
+    // MARK: - Secure Input
+
+    private var secureInputObservation: SecureInputObservation?
+
+    /// Called by the app when the Secure Input holder changes; nil when it is released.
+    func updateSecureInput(_ observation: SecureInputObservation?) {
+        secureInputObservation = observation
+        refreshSecureInputAdvice()
+    }
+
+    /// Re-derives the advice: which app is in front and what kind of field has focus both
+    /// change without any Secure Input event.
+    func refreshSecureInputAdvice() {
+        guard let observation = secureInputObservation, observation.isEnabled else {
+            if secureInputAdvice != nil { secureInputAdvice = nil }
+            return
+        }
+        let front = NSWorkspace.shared.frontmostApplication
+        let holder = observation.holderPID > 0
+            ? NSRunningApplication(processIdentifier: observation.holderPID)
+            : nil
+        var focusedIsSecure: Bool?
+        if let front, front.processIdentifier == observation.holderPID {
+            focusedIsSecure = Self.focusedFieldIsSecure(pid: front.processIdentifier)
+        }
+        let advice = SecureInputAdvisor.advise(observation: observation,
+                                               holderBundleId: holder?.bundleIdentifier,
+                                               frontmostPID: front?.processIdentifier,
+                                               focusedFieldIsSecure: focusedIsSecure)
+        if advice != secureInputAdvice { secureInputAdvice = advice }
+    }
+
+    /// nil when the field cannot be read (Chromium exposes web fields only with accessibility on).
+    private static func focusedFieldIsSecure(pid: pid_t) -> Bool? {
+        let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(app, 0.25)
+        guard let element = AXHelper.getElement(app, attribute: kAXFocusedUIElementAttribute as String) else {
+            return nil
+        }
+        guard let subrole = AXHelper.getString(element, attribute: kAXSubroleAttribute as String) else {
+            return nil
+        }
+        return subrole == "AXSecureTextField"
+    }
+
+    /// Asks first: both remedies close an app the user may have unsaved work in.
+    func performSecureInputRemedy(_ advice: SecureInputAdvice) {
+        let name = advice.holderName
+        let alert = NSAlert.withCredits()
+        alert.alertStyle = .warning
+        switch advice.remedy {
+        case .none:
+            return
+        case .relaunchBrowser:
+            alert.messageText = "Khởi động lại \(name)?"
+            alert.informativeText = "\(name) sẽ tự đóng và mở lại, các tab đang mở được khôi phục. Cửa sổ ẩn danh và nội dung chưa gửi trong ô nhập có thể mất. Sau đó Secure Input được nhả và gõ tiếng Việt trở lại."
+            alert.addButton(withTitle: "Khởi động lại")
+        case .quitHolder:
+            alert.messageText = "Thoát \(name)?"
+            alert.informativeText = "\(name) đang giữ Secure Input. Thoát để gõ tiếng Việt trở lại; nếu còn dữ liệu chưa lưu, \(name) sẽ hỏi bạn."
+            alert.addButton(withTitle: "Thoát \(name)")
+        }
+        alert.addButton(withTitle: "Hủy")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        switch advice.remedy {
+        case .relaunchBrowser(let bundleId, let scheme):
+            guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId),
+                  let url = URL(string: "\(scheme)://restart") else { return }
+            NSWorkspace.shared.open([url], withApplicationAt: appURL,
+                                    configuration: NSWorkspace.OpenConfiguration()) { [weak self] _, error in
+                self?.log("Relaunch \(bundleId): \(error.map { "failed \($0)" } ?? "requested")")
+            }
+        case .quitHolder(let pid):
+            NSRunningApplication(processIdentifier: pid)?.terminate()
+            log("Asked pid \(pid) to quit to release Secure Input")
+        case .none:
+            break
+        }
     }
     
     func updateHotkeyDisplay(_ hotkey: Hotkey? = nil) {

@@ -46,8 +46,13 @@ struct AboutSection: View {
                 
                 // Author
                 VStack(spacing: 4) {
-                    Text(AppCredits.builtBy)
+                    Text(AppCredits.signature)
                         .font(.system(size: 12, weight: .medium))
+                    Button(AppCredits.builtBy) {
+                        if let url = URL(string: AppCredits.authorPage) { NSWorkspace.shared.open(url) }
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
                     Text("Gõ thẳng, không gạch chân, không gửi dữ liệu ra ngoài.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -59,7 +64,7 @@ struct AboutSection: View {
                 // GitHub Links
                 HStack(spacing: 20) {
                     Button(action: {
-                        if let url = URL(string: "https://1x.xuanhieu.org/key") {
+                        if let url = URL(string: "https://1xag.com/key") {
                             NSWorkspace.shared.open(url)
                         }
                     }) {
@@ -74,7 +79,7 @@ struct AboutSection: View {
                     .controlSize(.small)
                     
                     Button(action: {
-                        if let url = URL(string: "https://1x.xuanhieu.org/key#gop-y") {
+                        if let url = URL(string: "https://1xag.com/key#gop-y") {
                             NSWorkspace.shared.open(url)
                         }
                     }) {
@@ -100,7 +105,7 @@ struct AboutSection: View {
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.down.circle")
                             .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         Text("Kiểm tra phiên bản mới")
                             .font(.caption)
                             .foregroundColor(.secondary)

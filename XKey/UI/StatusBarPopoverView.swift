@@ -1,9 +1,11 @@
 import SwiftUI
+import Combine
 
 // MARK: - Glass Design Menu Bar Popover (macOS 12+)
 
 struct StatusBarPopoverView: View {
     @ObservedObject var viewModel: StatusBarViewModel
+    @ObservedObject var notices: NoticeCenter = KeyNotices.center
     var onCheckForUpdates: (() -> Void)?
     var onDismiss: (() -> Void)?
 
@@ -19,12 +21,89 @@ struct StatusBarPopoverView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 4)
 
+            if let advice = viewModel.secureInputAdvice {
+                secureInputCard(advice)
+            }
             toggleSection
             inputMethodSection
+            launchAtLoginSection
             footerSection
         }
         .padding(.vertical, 6)
         .frame(width: 280)
+        .onAppear {
+            viewModel.refreshLaunchAtLogin()
+            viewModel.refreshSecureInputAdvice()
+        }
+        // Which app is in front, and whether its focused field is a password field, change
+        // without any Secure Input event; the settings pane can also flip the login item.
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+            viewModel.refreshSecureInputAdvice()
+            viewModel.refreshLaunchAtLogin()
+        }
+    }
+
+    // MARK: - Secure Input
+    private func secureInputCard(_ advice: SecureInputAdvice) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.orange)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(advice.headline)
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(advice.detail)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if let title = advice.actionTitle {
+                Button(title) {
+                    onDismiss?()
+                    viewModel.performSecureInputRemedy(advice)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .tint(.orange)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.orange.opacity(0.12))
+        )
+        .padding(.horizontal, 8)
+    }
+
+    // MARK: - Launch at login
+    private var launchAtLoginSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Mở cùng macOS")
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { viewModel.launchAtLogin },
+                    set: { viewModel.setLaunchAtLogin($0) }
+                ))
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.small)
+            }
+            if viewModel.launchAtLoginNeedsApproval {
+                Text("macOS cần bạn bật 1xKey trong Cài đặt hệ thống → Mục đăng nhập.")
+                    .font(.system(size: 10))
+                    .foregroundColor(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 4)
+        .menuCardStyle()
     }
 
     /// 1xKey offers only the two layouts Vietnamese typists actually use.
@@ -97,6 +176,15 @@ struct StatusBarPopoverView: View {
     // MARK: - Footer Section
     private var footerSection: some View {
         VStack(spacing: 1) {
+            ActionRow(title: LocalizedStringKey(notices.infoMenuTitle()),
+                      icon: notices.unreadCount > 0 ? "bell.badge" : "info.circle") {
+                onDismiss?()
+                KeyNotices.infoWindow.show()
+            }
+            .accessibilityLabel(notices.unreadCount > 0
+                                ? "\(notices.infoMenuTitle()), \(notices.accessibilityTitle())"
+                                : notices.infoMenuTitle())
+
             ActionRow(title: "Thoát 1xKey", icon: "power", shortcut: "⌘Q") {
                 viewModel.quit()
             }
@@ -234,5 +322,27 @@ struct VisualEffectBackground: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.material = material
         nsView.blendingMode = blendingMode
+    }
+}
+
+// MARK: - 1xAg notices (feed https://1xag.com/notices.json, product key "key")
+
+enum KeyNotices {
+    static let center = NoticeCenter(product: "key")
+    /// Cobalt #2B3BFF on light, #8C97FF on dark (1xAg tokens).
+    static let accent = Color(nsColor: NSColor(name: "1xAgAccent") { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(srgbRed: 0x8C / 255.0, green: 0x97 / 255.0, blue: 1, alpha: 1)
+            : NSColor(srgbRed: 0x2B / 255.0, green: 0x3B / 255.0, blue: 1, alpha: 1)
+    })
+    static let infoWindow = KeyInfoWindowController(center: center, accent: accent, appName: "1xKey")
+    private static var timer: Timer?
+
+    /// At launch when due, then an hourly look; the feed itself is fetched at most once per 24 h. Silent offline.
+    static func start() {
+        Task { await center.refreshIfDue() }
+        timer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
+            Task { await center.refreshIfDue() }
+        }
     }
 }

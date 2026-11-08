@@ -132,6 +132,10 @@
 		TAPSRC0002 /* TapEventSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = TAPSRC0001 /* TapEventSource.swift */; };
 		TAPSRC0003 /* TapEventSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = TAPSRC0001 /* TapEventSource.swift */; };
 		APPVERSION001 /* AppVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = APPVERSION002 /* AppVersion.swift */; };
+		NOTICECTR001 /* NoticeCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = NOTICECTR002 /* NoticeCenter.swift */; };
+		NOTICEWIN001 /* NoticesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = NOTICEWIN002 /* NoticesWindow.swift */; };
+		KEYINFOWIN001 /* KeyInfoWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = KEYINFOWIN002 /* KeyInfoWindow.swift */; };
+		NOTICETST001 /* NoticeCenterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = NOTICETST002 /* NoticeCenterTests.swift */; };
 		BD23C4DFC4585965C86E2B51 /* BackupRestoreSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69901F64AACBE0FBAC7C0E0F /* BackupRestoreSection.swift */; };
 		C4EDC498282B5B6D76626F6D /* AdvancedSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F362794B762A19FE8D883F35 /* AdvancedSection.swift */; };
 		CEBF55C134CDBDA34B5E84A8 /* QuickTypingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2608F3ABD0C3E93C052478 /* QuickTypingSection.swift */; };
@@ -303,6 +307,10 @@
 		VNDICTT001 /* VNDictionaryManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VNDictionaryManagerTests.swift; sourceTree = "<group>"; };
 		TAPSRC0001 /* TapEventSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapEventSource.swift; sourceTree = "<group>"; };
 		APPVERSION002 /* AppVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersion.swift; sourceTree = "<group>"; };
+		NOTICECTR002 /* NoticeCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeCenter.swift; sourceTree = "<group>"; };
+		NOTICEWIN002 /* NoticesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticesWindow.swift; sourceTree = "<group>"; };
+		KEYINFOWIN002 /* KeyInfoWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyInfoWindow.swift; sourceTree = "<group>"; };
+		NOTICETST002 /* NoticeCenterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeCenterTests.swift; sourceTree = "<group>"; };
 		B65F5E57423E05ADF4033DCD /* TempOffToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TempOffToolbarView.swift; sourceTree = "<group>"; };
 		C5461DA850B59B52384E81D6 /* StatusBarPopoverView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StatusBarPopoverView.swift; sourceTree = "<group>"; };
 		CE144E0F510944E89100C852 /* SharedComponents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
@@ -427,6 +435,7 @@
 				100D2BE32EF2C71E00C26B87 /* IMKitHelper.swift */,
 				LAUNCHATLOGIN002 /* LaunchAtLogin.swift */,
 				APPVERSION002 /* AppVersion.swift */,
+				NOTICECTR002 /* NoticeCenter.swift */,
 				CF3AC1443684F88A6422F6F1 /* AudioManager.swift */,
 			);
 			path = Utilities;
@@ -584,6 +593,8 @@
 				1D1AFFFF1204DAB29F3AAE19 /* LogFileReader.swift */,
 				53FD9B0D641FE6019C3870E0 /* TempOffToolbar */,
 				C5461DA850B59B52384E81D6 /* StatusBarPopoverView.swift */,
+				NOTICEWIN002 /* NoticesWindow.swift */,
+				KEYINFOWIN002 /* KeyInfoWindow.swift */,
 				66372C6A89C941917C844E21 /* Components */,
 				D985D8F505677F8358B5125E /* ToggleHUDWindow.swift */,
 			);
@@ -643,6 +654,7 @@
 				HOSTCMD0003 /* HostCommandRouterTests.swift */,
 				ARCHTEST0001 /* InputArchitectureTests.swift */,
 				LANG0002 /* AppLanguageTests.swift */,
+				NOTICETST002 /* NoticeCenterTests.swift */,
 				MACR0002 /* MacroManagerTests.swift */,
 				ADAPT0002 /* VNEngineAdaptiveTests.swift */,
 				SCRSIM0002 /* ScreenSimulationTests.swift */,
@@ -923,6 +935,9 @@
 				107602EE2EF4E3BA00ADC084 /* InputSourceManager.swift in Sources */,
 				5FEB1775ED6A86BD90EEE11F /* SettingsWindowController.swift in Sources */,
 				APPVERSION001 /* AppVersion.swift in Sources */,
+				NOTICECTR001 /* NoticeCenter.swift in Sources */,
+				NOTICEWIN001 /* NoticesWindow.swift in Sources */,
+				KEYINFOWIN001 /* KeyInfoWindow.swift in Sources */,
 				LAUNCHATLOGIN001 /* LaunchAtLogin.swift in Sources */,
 				STATUSBARVM001 /* StatusBarViewModel.swift in Sources */,
 				DEBUGVM001 /* DebugViewModel.swift in Sources */,
@@ -984,6 +999,7 @@
 				HOSTCMD0004 /* HostCommandRouterTests.swift in Sources */,
 				ARCHTEST0002 /* InputArchitectureTests.swift in Sources */,
 				LANG0001 /* AppLanguageTests.swift in Sources */,
+				NOTICETST001 /* NoticeCenterTests.swift in Sources */,
 				MACR0001 /* MacroManagerTests.swift in Sources */,
 				ADAPT0001 /* VNEngineAdaptiveTests.swift in Sources */,
 				SCRSIM0001 /* ScreenSimulationTests.swift in Sources */,
@@ -1225,6 +1241,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = XKey/XKey.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
@@ -1258,6 +1275,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = XKey/XKeyRelease.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";

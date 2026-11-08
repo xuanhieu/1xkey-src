@@ -33,10 +33,13 @@ struct AppVersion {
 /// Author credit shown in Settings, the menu bar popover, the debug window and every alert.
 enum AppCredits {
     static let author = "Phạm Xuân Hiếu"
-    static let website = "1x.xuanhieu.org/key"
-    /// One-line credit, e.g. "1xKey 1.2.25 · © 2026 Phạm Xuân Hiếu"
-    static var line: String { "1xKey \(AppVersion.current) · © 2026 \(author)" }
-    static let builtBy = "Phát triển bởi Phạm Xuân Hiếu"
+    static let website = "1xag.com/key"
+    /// One-line credit, e.g. "1xKey 1.2.25 · /by_xuanhieu.org"
+    static var line: String { "1xKey \(AppVersion.current) · /by_xuanhieu.org" }
+    /// 1xAg signature and author lines (brand standard, 03/11/2026).
+    static let signature = "1xAg · /by_xuanhieu.org"
+    static let builtBy = "1xHieu · Confirmed: a true human"
+    static let authorPage = "https://xuanhieu.org/gioi-thieu"
     static let slogan = "Bộ gõ đơn giản, tối giản, thuận tiện cho người Việt chỉ muốn gõ tiếng Việt chuẩn."
     static let upstream = "Dựa trên XKey (xmannv, MIT) và OpenKey (Mai Vũ Tuyên, GPL-3.0)"
 }

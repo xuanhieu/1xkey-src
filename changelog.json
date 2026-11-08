@@ -1,0 +1,84 @@
+{
+  "product": "1xKey",
+  "slug": "key",
+  "url": "https://1xag.com/key/changelog",
+  "format": "keep-a-changelog-1.1.0",
+  "versioning": "semver-2.0.0",
+  "updated": "2026-11-03",
+  "note": null,
+  "history": {
+    "vi": "1xKey là bản rút gọn của XKey (MIT). Lịch sử trước khi tách nhánh nằm trong `git log` trước commit 954fb4f.",
+    "en": "1xKey is a trimmed fork of XKey (MIT). History before the fork lives in `git log` before commit 954fb4f."
+  },
+  "versions": [
+    {
+      "version": "1.1.0",
+      "date": "2026-11-03",
+      "date_verified": true,
+      "released": true,
+      "items": [
+        {
+          "type": "added",
+          "vi": "Mục \"Thông báo\" đọc tin từ 1xAg (https://1xag.com/notices.json): số tin chưa đọc hiện ngay trong menu thanh trạng thái, danh sách có ngày, nội dung và nút mở liên kết. Mỗi ngày kiểm tra tối đa một lần, không gửi dữ liệu nào về bạn, mất mạng thì im lặng; tin đã đọc lưu trên máy.",
+          "en": "\"Notices\" reads news from 1xAg (https://1xag.com/notices.json): the unread count shows in the menu bar popover, the list has dates, text and a link button. Checked at most once a day, sends nothing about you, silent when offline; read state stays on your Mac."
+        },
+        {
+          "type": "changed",
+          "vi": "Thương hiệu 1xAg: icon riêng (ô đen, ký hiệu bàn phím bạc, chấm cobalt), trang chủ 1xag.com/key, chữ ký \"/by_xuanhieu.org\", màu nhấn cobalt, About có dòng tác giả 1xHieu.",
+          "en": "1xAg brand: own icon (black tile, silver keyboard glyph, cobalt dot), homepage 1xag.com/key, \"/by_xuanhieu.org\" signature, cobalt accent, author line 1xHieu in About."
+        }
+      ]
+    },
+    {
+      "version": "1.0.1",
+      "date": "2026-11-01",
+      "date_verified": true,
+      "released": true,
+      "items": [
+        {
+          "type": "removed",
+          "vi": "Bỏ mọi phím tắt toàn cục (kể cả ⌘⇧V). Bật/tắt tiếng Việt từ menu.",
+          "en": "All global hotkeys removed (including ⌘⇧V). Toggle Vietnamese from the menu."
+        },
+        {
+          "type": "removed",
+          "vi": "Không còn build, nhúng hay tự cài bộ gõ IMKit 1xKeyIM.",
+          "en": "The 1xKeyIM IMKit input method is no longer built, embedded or auto-installed."
+        },
+        {
+          "type": "changed",
+          "vi": "App còn 5,1 MB. Danh sách app loại trừ, icon Dock và bấm-để-bật luôn tắt.",
+          "en": "App is now 5.1 MB. Excluded apps, Dock icon and click-to-toggle are always off."
+        }
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-11-01",
+      "date_verified": true,
+      "released": true,
+      "items": [
+        {
+          "type": "added",
+          "vi": "Bản đầu tiên: bộ gõ tiếng Việt trên menu bar, Telex hoặc VNI, bảng mã Unicode.",
+          "en": "First release: Vietnamese input on the menu bar, Telex or VNI, Unicode."
+        },
+        {
+          "type": "removed",
+          "vi": "Bỏ dịch, đồng bộ iCloud, Sparkle và các tính năng phụ của XKey.",
+          "en": "Translation, iCloud sync, Sparkle and XKey side features removed."
+        },
+        {
+          "type": "security",
+          "vi": "Log gỡ lỗi không ghi ký tự, mã phím hay đoạn chữ đã gõ.",
+          "en": "Debug logs never record typed characters, key codes or quoted text."
+        },
+        {
+          "type": "fixed",
+          "vi": "Không hiện cảnh báo quyền khi macOS đang cập nhật quyền; cảnh báo tự đóng khi đã cấp.",
+          "en": "No permission alert while macOS settles permissions; the alert closes itself once granted."
+        }
+      ]
+    }
+  ]
+}

@@ -434,3 +434,81 @@ private final class TransitionRecorder: @unchecked Sendable {
         lock.unlock()
     }
 }
+
+final class SecureInputAdvisorTests: XCTestCase {
+    private func obs(_ pid: pid_t, _ name: String = "App") -> SecureInputObservation {
+        SecureInputObservation(isEnabled: true, holderPID: pid, holderAppName: name)
+    }
+
+    func testUnknownHolderOffersNothing() {
+        let advice = SecureInputAdvisor.advise(observation: obs(-1), holderBundleId: nil,
+                                               frontmostPID: 10, focusedFieldIsSecure: nil)
+        XCTAssertEqual(advice.reason, .unknown)
+        XCTAssertEqual(advice.remedy, .none)
+        XCTAssertNil(advice.actionTitle)
+    }
+
+    func testSystemHolderOffersNothing() {
+        let advice = SecureInputAdvisor.advise(observation: obs(426, "loginwindow"),
+                                               holderBundleId: "com.apple.loginwindow",
+                                               frontmostPID: 426, focusedFieldIsSecure: nil)
+        XCTAssertEqual(advice.reason, .system)
+        XCTAssertEqual(advice.remedy, .none)
+    }
+
+    func testGenuinePasswordFieldInFrontmostBrowserIsLeftAlone() {
+        let advice = SecureInputAdvisor.advise(observation: obs(100, "Google Chrome"),
+                                               holderBundleId: "com.google.Chrome",
+                                               frontmostPID: 100, focusedFieldIsSecure: true)
+        XCTAssertEqual(advice.reason, .passwordField)
+        XCTAssertEqual(advice.remedy, .none, "never offer to restart the app while the user is typing a password")
+    }
+
+    func testFrontmostChromeWithoutPasswordFieldIsALeakWithRelaunch() {
+        for secure in [false, nil] as [Bool?] {
+            let advice = SecureInputAdvisor.advise(observation: obs(100, "Google Chrome"),
+                                                   holderBundleId: "com.google.Chrome",
+                                                   frontmostPID: 100, focusedFieldIsSecure: secure)
+            XCTAssertEqual(advice.reason, .possibleLeak)
+            XCTAssertEqual(advice.remedy, .relaunchBrowser(bundleId: "com.google.Chrome", scheme: "chrome"))
+            XCTAssertEqual(advice.actionTitle, "Khởi động lại Google Chrome (giữ nguyên tab)")
+        }
+    }
+
+    func testBackgroundBrowserAndOtherAppsGetTheRightRemedy() {
+        let edge = SecureInputAdvisor.advise(observation: obs(7, "Microsoft Edge"),
+                                             holderBundleId: "com.microsoft.edgemac",
+                                             frontmostPID: 99, focusedFieldIsSecure: nil)
+        XCTAssertEqual(edge.reason, .background)
+        XCTAssertEqual(edge.remedy, .relaunchBrowser(bundleId: "com.microsoft.edgemac", scheme: "edge"))
+
+        let other = SecureInputAdvisor.advise(observation: obs(8, "Foo"),
+                                              holderBundleId: "com.example.foo",
+                                              frontmostPID: 99, focusedFieldIsSecure: nil)
+        XCTAssertEqual(other.remedy, .quitHolder(pid: 8))
+        XCTAssertEqual(other.actionTitle, "Thoát Foo")
+    }
+}
+
+final class LaunchAtLoginTests: XCTestCase {
+    func testDefaultIsAppliedOnlyOnceAndOnlyFromApplications() {
+        let suite = UserDefaults(suiteName: "1xkey-launch-test-\(UUID().uuidString)")!
+        // Outside Applications: nothing happens and the flag stays unset.
+        LaunchAtLogin.applyDefaultOnce(defaults: suite, bundlePath: "/tmp/build/1xKey.app")
+        XCTAssertFalse(suite.bool(forKey: "org.xuanhieu.1xkey.loginItemDefaultApplied"))
+    }
+
+    func testApplicationsFolderDetection() {
+        XCTAssertTrue(LaunchAtLogin.isInstalledInApplications("/Applications/1xKey.app"))
+        XCTAssertTrue(LaunchAtLogin.isInstalledInApplications(NSHomeDirectory() + "/Applications/1xKey.app"))
+        XCTAssertFalse(LaunchAtLogin.isInstalledInApplications("/Volumes/SSD/build/1xKey.app"))
+        XCTAssertFalse(LaunchAtLogin.isInstalledInApplications("/Applications-evil/1xKey.app"))
+    }
+
+    func testLegacyPlistRunsTheExecutableAtLoginWithoutKeepAlive() {
+        let plist = LaunchAtLogin.legacyPlist(executablePath: "/Applications/1xKey.app/Contents/MacOS/1xKey")
+        XCTAssertEqual(plist["RunAtLoad"] as? Bool, true)
+        XCTAssertEqual(plist["KeepAlive"] as? Bool, false, "quitting from the menu must not respawn the app")
+        XCTAssertEqual(plist["ProgramArguments"] as? [String], ["/Applications/1xKey.app/Contents/MacOS/1xKey"])
+    }
+}

@@ -479,7 +479,7 @@ class XKeyIMController: IMKInputController {
         versionItem.isEnabled = false
         menu.addItem(versionItem)
         // AppVersion.swift is not in the IM target, so the credit is spelled out here.
-        let creditItem = NSMenuItem(title: "1xKey · © 2026 Phạm Xuân Hiếu", action: nil, keyEquivalent: "")
+        let creditItem = NSMenuItem(title: "1xKey · /by_xuanhieu.org", action: nil, keyEquivalent: "")
         creditItem.isEnabled = false
         menu.addItem(creditItem)
 

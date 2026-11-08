@@ -88,9 +88,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let appName = observation.holderAppName
                 self.debugWindowController?.logEvent("⚠️ Secure Input đang BẬT bởi '\(appName)' — 1xKey không thể nhận phím!")
                 self.debugWindowController?.updateStatus("⚠️ Secure Input: \(appName)")
+                DispatchQueue.main.async { self.statusBarManager?.viewModel.updateSecureInput(observation) }
             case .becameInactive:
                 self.debugWindowController?.logEvent("✅ Secure Input đã TẮT — 1xKey hoạt động bình thường")
                 self.debugWindowController?.updateStatus("Ready")
+                DispatchQueue.main.async { self.statusBarManager?.viewModel.updateSecureInput(nil) }
             }
         }
     )
@@ -207,6 +209,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Initialize components
         setupKeyboardHandling()
         setupStatusBar()
+        KeyNotices.start()
         
         // Apply loaded preferences
         applyPreferences(preferences)
@@ -263,6 +266,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Common cause: 1Password, Terminal, browser password fields holding Secure Input ON.
         // The subscription emits immediately, which performs the initial check.
         setupSecureInputMonitoring()
+        LaunchAtLogin.applyDefaultOnce()
 
         debugWindowController?.updateStatus("1xKey started successfully")
         debugWindowController?.logEvent("1xKey started successfully")

@@ -20,7 +20,7 @@ final class SecureInputOverlay: SecureInputPresenting {
         overlay.show(
             content: AnyView(OverlayWarningView(
                 title: String(localized: "Secure Input đang bật"),
-                subtitle: String(localized: "\(appName) đang chặn 1xKey xử lý Tiếng Việt")
+                subtitle: String(localized: "\(appName) đang chặn 1xKey. Bấm biểu tượng 1xKey để xử lý")
             )),
             position: .bottomCenter,
             autoHideAfter: 5

@@ -2,18 +2,48 @@
 //  LaunchAtLogin.swift
 //  XKey
 //
-//  Utility for managing launch at login
+//  "Mở cùng macOS": registers 1xKey as a login item.
+//  macOS 13+ uses SMAppService (shows up in System Settings > Login Items).
+//  macOS 12 has no equivalent for a plain app, so it uses a LaunchAgent plist.
 //
 
+import AppKit
 import Foundation
 import ServiceManagement
 
-class LaunchAtLogin {
-    
-    /// Enable or disable launch at login
-    static func setEnabled(_ enabled: Bool) {
+enum LaunchAtLoginState: Equatable {
+    case enabled
+    case disabled
+    /// Registered, but the user switched it off (or has not allowed it) in System Settings.
+    case requiresApproval
+}
+
+enum LaunchAtLogin {
+    private static let defaultAppliedKey = "org.xuanhieu.1xkey.loginItemDefaultApplied"
+    private static let legacyLabel = "org.xuanhieu.1xkey.launch"
+
+    // MARK: - State
+
+    static func status() -> LaunchAtLoginState {
         if #available(macOS 13.0, *) {
-            // Modern API for macOS 13+
+            switch SMAppService.mainApp.status {
+            case .enabled: return .enabled
+            case .requiresApproval: return .requiresApproval
+            default: return .disabled
+            }
+        }
+        return FileManager.default.fileExists(atPath: legacyPlistURL.path) ? .enabled : .disabled
+    }
+
+    static func isEnabled() -> Bool {
+        status() == .enabled
+    }
+
+    // MARK: - Change
+
+    @discardableResult
+    static func setEnabled(_ enabled: Bool) -> LaunchAtLoginState {
+        if #available(macOS 13.0, *) {
             do {
                 if enabled {
                     try SMAppService.mainApp.register()
@@ -21,23 +51,69 @@ class LaunchAtLogin {
                     try SMAppService.mainApp.unregister()
                 }
             } catch {
-                
+                // Already in the requested state, or macOS refused: the re-read below is the truth.
             }
         } else {
-            // Legacy API for macOS 12 and below
-            // Note: This should be the helper bundle ID, not the App Group
-            SMLoginItemSetEnabled("org.xuanhieu.1xkey.LaunchHelper" as CFString, enabled)
+            if enabled {
+                writeLegacyPlist()
+            } else {
+                try? FileManager.default.removeItem(at: legacyPlistURL)
+            }
+        }
+        return status()
+    }
+
+    /// New installs start with the login item on, once. After that the user's choice wins,
+    /// including turning it off. Skipped for builds running outside an Applications folder,
+    /// because a login item pointing at a build directory would break on the next rebuild.
+    static func applyDefaultOnce(defaults: UserDefaults = .standard,
+                                 bundlePath: String = Bundle.main.bundlePath) {
+        guard !defaults.bool(forKey: defaultAppliedKey) else { return }
+        guard isInstalledInApplications(bundlePath) else { return }
+        defaults.set(true, forKey: defaultAppliedKey)
+        if status() == .disabled {
+            setEnabled(true)
         }
     }
-    
-    /// Check if launch at login is currently enabled
-    static func isEnabled() -> Bool {
+
+    static func isInstalledInApplications(_ bundlePath: String) -> Bool {
+        let userApplications = NSHomeDirectory() + "/Applications/"
+        return bundlePath.hasPrefix("/Applications/") || bundlePath.hasPrefix(userApplications)
+    }
+
+    static func openSystemSettings() {
         if #available(macOS 13.0, *) {
-            return SMAppService.mainApp.status == .enabled
-        } else {
-            // For legacy API, we can't reliably check status
-            // Return false as default
-            return false
+            SMAppService.openSystemSettingsLoginItems()
         }
+    }
+
+    // MARK: - macOS 12 fallback
+
+    static var legacyPlistURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/LaunchAgents/\(legacyLabel).plist")
+    }
+
+    static func legacyPlist(executablePath: String) -> [String: Any] {
+        [
+            "Label": legacyLabel,
+            "ProgramArguments": [executablePath],
+            "RunAtLoad": true,
+            "KeepAlive": false,
+            "ProcessType": "Interactive",
+        ]
+    }
+
+    private static func writeLegacyPlist() {
+        guard let executable = Bundle.main.executablePath,
+              let data = try? PropertyListSerialization.data(
+                fromPropertyList: legacyPlist(executablePath: executable),
+                format: .xml,
+                options: 0)
+        else { return }
+        let url = legacyPlistURL
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                 withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
     }
 }
