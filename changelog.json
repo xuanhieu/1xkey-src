@@ -4,13 +4,41 @@
   "url": "https://1xag.com/key/changelog",
   "format": "keep-a-changelog-1.1.0",
   "versioning": "semver-2.0.0",
-  "updated": "2026-11-03",
+  "updated": "2026-11-08",
   "note": null,
   "history": {
     "vi": "1xKey là bản rút gọn của XKey (MIT). Lịch sử trước khi tách nhánh nằm trong `git log` trước commit 954fb4f.",
     "en": "1xKey is a trimmed fork of XKey (MIT). History before the fork lives in `git log` before commit 954fb4f."
   },
   "versions": [
+    {
+      "version": "1.1.1",
+      "date": "2026-11-08",
+      "date_verified": true,
+      "released": true,
+      "items": [
+        {
+          "type": "added",
+          "vi": "Công tắc \"Mở cùng macOS\" ngay trên menu, bật sẵn ở lần chạy đầu tiên. Tắt đi thì 1xKey nhớ lựa chọn của bạn.",
+          "en": "An \"Open at login\" switch in the menu, on by default at first launch. Turn it off and 1xKey remembers your choice."
+        },
+        {
+          "type": "added",
+          "vi": "Gỡ Secure Input trong một lần bấm: khi Chrome hay ứng dụng khác giữ Secure Input (macOS giấu phím khỏi mọi bộ gõ), menu hiện thẻ cam nói rõ ứng dụng nào và có nút xử lý, ví dụ khởi động lại Chrome mà giữ nguyên tab. Ở ô mật khẩu thật, 1xKey chỉ báo và tự nghỉ.",
+          "en": "One-click Secure Input recovery: when Chrome or another app holds Secure Input (macOS hides keystrokes from every input method), the menu shows an orange card naming the app with a fix button, such as relaunching Chrome with its tabs restored. In a real password field 1xKey only informs you and stays out of the way."
+        },
+        {
+          "type": "changed",
+          "vi": "Mục \"Thông báo\" thành \"Giới thiệu & Thông báo\": thêm tab giới thiệu với hướng dẫn nhanh, liên kết tới trang sản phẩm, nhật ký thay đổi, tác giả, mã nguồn, góp ý và nút sao chép link chia sẻ. Tab Thông báo giữ nguyên.",
+          "en": "\"Notices\" becomes \"About & Notices\": a new intro tab with a quick guide, links to the product page, changelog, author, source code and feedback, and a copy-link share button. The Notices tab is unchanged."
+        },
+        {
+          "type": "fixed",
+          "vi": "Không còn hộp thoại xin quyền Accessibility hiện sai ngay lúc khởi động; hộp thoại tự đóng khi bạn đã cấp quyền.",
+          "en": "No more Accessibility permission alert appearing wrongly right at launch; the alert closes itself once permission is granted."
+        }
+      ]
+    },
     {
       "version": "1.1.0",
       "date": "2026-11-03",
