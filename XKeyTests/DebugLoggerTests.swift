@@ -93,3 +93,16 @@ final class DebugLogRedactionTests: XCTestCase {
         XCTAssertEqual(DebugLogger.redact(line), line)
     }
 }
+
+final class KeyTelemetryTests: XCTestCase {
+    func testSlowCallbackThresholdIsThirtyMilliseconds() {
+        XCTAssertFalse(KeyTelemetry.isSlow(29_999_999))
+        XCTAssertTrue(KeyTelemetry.isSlow(30_000_000))
+        XCTAssertTrue(KeyTelemetry.isSlow(1_960_000_000), "the ~2 s stall measured on the starved Mac")
+    }
+
+    func testNoteCallbackNeverThrowsOnClockSkew() {
+        // A start time in the future must not trap on unsigned subtraction.
+        KeyTelemetry.noteCallback(startedAt: KeyTelemetry.now() + 5_000_000_000, kind: "test")
+    }
+}

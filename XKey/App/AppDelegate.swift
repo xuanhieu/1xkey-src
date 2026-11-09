@@ -45,6 +45,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var tapEventSource: TapEventSource?
     private var secureInputOwnershipObserver: NSObjectProtocol?
     private var permissionAlertShown = false
+    private var keyboardActivity: NSObjectProtocol?
     private var permissionCheckTimer: Timer?
     private var inputSourceManager: InputSourceManager?
     private var switchXKeyHotkeyMonitor: Any?
@@ -206,6 +207,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.debugWindowController?.logEvent(message)
         }
         
+        // A keyboard utility must not be App Napped or have its timers coalesced: a late key is a
+        // wrong or missing letter. Without this the system may slow the process when memory is tight.
+        keyboardActivity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+            reason: "1xKey keyboard event tap")
+        KeyTelemetry.startMemoryPressureMonitor()
+
         // Initialize components
         setupKeyboardHandling()
         setupStatusBar()
@@ -414,6 +422,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.debugWindowController?.updateStatus("Waiting for accessibility permission...")
             self?.debugWindowController?.logEvent("Accessibility permission revoked; event tap stopped")
             self?.startPermissionMonitoring()
+        }
+        eventTapManager?.onTapDisabled = { [weak self] in
+            self?.keyboardHandler?.resetWithCursorMoved()
         }
         eventTapManager?.onHostCommand = { [weak self] command, event, proxy in
             guard let self else { return .unavailable }

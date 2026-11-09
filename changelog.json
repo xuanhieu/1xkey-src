@@ -4,13 +4,36 @@
   "url": "https://1xag.com/key/changelog",
   "format": "keep-a-changelog-1.1.0",
   "versioning": "semver-2.0.0",
-  "updated": "2026-11-08",
+  "updated": "2026-11-09",
   "note": null,
   "history": {
     "vi": "1xKey là bản rút gọn của XKey (MIT). Lịch sử trước khi tách nhánh nằm trong `git log` trước commit 954fb4f.",
     "en": "1xKey is a trimmed fork of XKey (MIT). History before the fork lives in `git log` before commit 954fb4f."
   },
   "versions": [
+    {
+      "version": "1.1.2",
+      "date": "2026-11-09",
+      "date_verified": true,
+      "released": true,
+      "items": [
+        {
+          "type": "fixed",
+          "vi": "Gõ không còn ra chữ lạ hoặc lệch dấu sau khi macOS tạm ngắt bộ bắt phím lúc máy quá tải: 1xKey kiểm tra mỗi giây, bật lại ngay và bỏ từ đang gõ dở để phím sau không tính trên dữ liệu cũ.",
+          "en": "No more stray characters or misplaced marks after macOS temporarily switches the key tap off on an overloaded Mac: 1xKey checks every second, re-enables it at once and drops the word in progress so the next key is not computed on stale state."
+        },
+        {
+          "type": "changed",
+          "vi": "Tiến trình bàn phím không còn bị App Nap làm chậm khi bộ nhớ căng.",
+          "en": "The keyboard process is no longer slowed by App Nap when memory is tight."
+        },
+        {
+          "type": "added",
+          "vi": "Nhật ký chẩn đoán an toàn trong nhật ký hệ thống: chỉ ghi thời gian xử lý phím chậm, số lần bộ bắt phím bị ngắt và mức áp lực bộ nhớ, không bao giờ ghi chữ bạn gõ. Xem bằng: log show --predicate 'subsystem == \"org.xuanhieu.1xkey\"'.",
+          "en": "Privacy-safe diagnostics in the system log: only slow key-handling times, how often the key tap was switched off and memory pressure, never what you type. View with: log show --predicate 'subsystem == \"org.xuanhieu.1xkey\"'."
+        }
+      ]
+    },
     {
       "version": "1.1.1",
       "date": "2026-11-08",

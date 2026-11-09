@@ -53,6 +53,9 @@ class EventTapManager {
     var debugLogCallback: ((String) -> Void)?
     var eventPermissionCheck: (() -> Bool)?
     var onEventTapPermissionLost: (() -> Void)?
+    /// macOS disabled the tap (or the watchdog found it off): keys typed in the gap were never
+    /// seen, so the word being typed no longer matches the screen and must be dropped.
+    var onTapDisabled: (() -> Void)?
     var onHostCommand: ((HostCommand, CGEvent, CGEventTapProxy) -> HostCommandResult)?
     
     // Toggle hotkey configuration
@@ -293,11 +296,45 @@ class EventTapManager {
         }
 
         isEnabled = true
+        startTapWatchdog()
         debugLogCallback?("Event tap fully started!")
+    }
+
+    // MARK: - Watchdog
+
+    private var tapWatchdog: Timer?
+
+    /// The disable notice reaches the callback only once the process is scheduled again, and on a
+    /// starved Mac that can take seconds. Checking the tap itself every second bounds the dead time.
+    private func startTapWatchdog() {
+        tapWatchdog?.invalidate()
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in self?.checkTapsAlive() }
+        timer.tolerance = 0.5
+        RunLoop.main.add(timer, forMode: .common)
+        tapWatchdog = timer
+    }
+
+    private func stopTapWatchdog() {
+        tapWatchdog?.invalidate()
+        tapWatchdog = nil
+    }
+
+    private func checkTapsAlive() {
+        guard isEnabled, hasEventTapPermission() else { return }
+        var revived = false
+        for tap in [eventTap, sessionEventTap].compactMap({ $0 }) where !CGEvent.tapIsEnabled(tap: tap) {
+            CGEvent.tapEnable(tap: tap, enable: true)
+            revived = true
+        }
+        if revived {
+            KeyTelemetry.tapFoundDisabled()
+            onTapDisabled?()
+        }
     }
 
     func stop() {
         guard isEnabled else { return }
+        stopTapWatchdog()
 
         if let monitor = modifierOnlyCancelMonitor {
             NSEvent.removeMonitor(monitor)
@@ -426,15 +463,19 @@ class EventTapManager {
         type: CGEventType,
         event: CGEvent
     ) -> Unmanaged<CGEvent>? {
+        let callbackStart = KeyTelemetry.now()
+        defer { KeyTelemetry.noteCallback(startedAt: callbackStart, kind: type == .keyDown ? "keyDown" : "other") }
         // Handle tap disabled events before session state. A timeout is recoverable, but
         // a revoked permission must fail open: repeatedly re-enabling a no-longer-authorized
         // tap can block physical input until this process exits.
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            KeyTelemetry.tapDisabled(reason: type == .tapDisabledByTimeout ? "timeout" : "user input")
             switch Self.disabledTapRecoveryAction(hasEventPermission: hasEventTapPermission()) {
             case .reenable:
                 if let tap = eventTap {
                     CGEvent.tapEnable(tap: tap, enable: true)
                 }
+                onTapDisabled?()
             case .stop:
                 if let tap = eventTap {
                     CGEvent.tapEnable(tap: tap, enable: false)
@@ -685,11 +726,15 @@ class EventTapManager {
         type: CGEventType,
         event: CGEvent
     ) -> Unmanaged<CGEvent>? {
+        let callbackStart = KeyTelemetry.now()
+        defer { KeyTelemetry.noteCallback(startedAt: callbackStart, kind: type == .keyDown ? "keyDown(session)" : "other(session)") }
         // Handle tap disabled event - re-enable session tap
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            KeyTelemetry.tapDisabled(reason: type == .tapDisabledByTimeout ? "timeout (session tap)" : "user input (session tap)")
             if let sTap = sessionEventTap {
                 CGEvent.tapEnable(tap: sTap, enable: true)
             }
+            onTapDisabled?()
             return Unmanaged.passUnretained(event)
         }
         

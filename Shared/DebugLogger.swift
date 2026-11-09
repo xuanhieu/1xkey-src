@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os
 
 // Forward declaration for DebugWindowController (only available in XKey)
 // This protocol allows us to reference the debug window without importing AppKit
@@ -284,4 +285,56 @@ func sharedLogSuccess(_ message: String, source: String = "") {
 @inline(__always)
 func sharedLogDebug(_ message: String, source: String = "") {
     logDebug(message, source: source)
+}
+
+// MARK: - Always-on keyboard health telemetry
+
+/// Timing and counts only, never what was typed. Goes to the unified log, so after a laggy
+/// session: `log show --last 1h --predicate 'subsystem == "org.xuanhieu.1xkey"'`.
+enum KeyTelemetry {
+    private static let logger = Logger(subsystem: "org.xuanhieu.1xkey", category: "keyboard")
+    /// A key callback slower than this is felt as lag (the system times a tap out at about a second).
+    static let slowCallbackNanoseconds: UInt64 = 30_000_000
+
+    private static var disabledCount = 0
+    private static var slowCount = 0
+    private static var worstNanoseconds: UInt64 = 0
+    private static var memorySource: DispatchSourceMemoryPressure?
+
+    static func isSlow(_ nanoseconds: UInt64) -> Bool { nanoseconds >= slowCallbackNanoseconds }
+
+    static func now() -> UInt64 { DispatchTime.now().uptimeNanoseconds }
+
+    static func noteCallback(startedAt start: UInt64, kind: String) {
+        let elapsed = now() &- start
+        guard isSlow(elapsed) else { return }
+        slowCount += 1
+        worstNanoseconds = max(worstNanoseconds, elapsed)
+        logger.notice("slow key callback: \(elapsed / 1_000_000, privacy: .public) ms (\(kind, privacy: .public)); slow so far \(slowCount, privacy: .public), worst \(worstNanoseconds / 1_000_000, privacy: .public) ms")
+    }
+
+    /// macOS switched the tap off (timeout or user input); keys typed meanwhile were not processed.
+    static func tapDisabled(reason: String) {
+        disabledCount += 1
+        logger.error("event tap disabled by \(reason, privacy: .public) (#\(disabledCount, privacy: .public)); re-enabled and typing state reset")
+    }
+
+    /// The watchdog found the tap off without a callback telling us.
+    static func tapFoundDisabled() {
+        disabledCount += 1
+        logger.error("event tap found disabled by the watchdog (#\(disabledCount, privacy: .public)); re-enabled and typing state reset")
+    }
+
+    /// Ties lag to a starved Mac: swap exhaustion is the usual reason keys arrive late everywhere.
+    static func startMemoryPressureMonitor() {
+        guard memorySource == nil else { return }
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.normal, .warning, .critical], queue: .main)
+        source.setEventHandler {
+            let level = source.data
+            let name = level.contains(.critical) ? "critical" : level.contains(.warning) ? "warning" : "normal"
+            logger.notice("memory pressure: \(name, privacy: .public)")
+        }
+        source.resume()
+        memorySource = source
+    }
 }
